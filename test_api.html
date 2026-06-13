@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test API</title>
+<style>
+body{font-family:system-ui;background:#0a0a0a;color:#fff;padding:16px;font-size:13px}
+.test{background:#111;border:1px solid #333;border-radius:8px;padding:12px;margin:8px 0}
+.test h3{font-size:12px;margin-bottom:6px}
+.test .status{font-size:11px;padding:4px 8px;border-radius:4px;display:inline-block;margin-top:4px}
+.test .status.ok{background:#4ade8020;color:#4ade80}
+.test .status.fail{background:#ef444420;color:#ef4444}
+.test .status.wait{background:#f59e0b20;color:#f59e0b}
+.test .response{font-size:10px;color:#888;margin-top:6px;max-height:80px;overflow:auto;word-break:break-all}
+button{background:#d4a017;color:#000;border:none;padding:12px 24px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;margin:12px 0}
+</style>
+</head>
+<body>
+<h1>🔍 Test API — Quel modèle marche ?</h1>
+<p style="color:#888;font-size:11px">Ouvre ce fichier dans Chrome (PAS dans Arena). Clique le bouton.</p>
+<button onclick="runTests()">▶ Lancer les tests</button>
+<div id="results"></div>
+
+<script>
+const TOKEN='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';
+const models=[
+{id:'mistralai/Mistral-7B-Instruct-v0.2',name:'Mistral 7B v0.2'},
+{id:'HuggingFaceH4/zephyr-7b-beta',name:'Zephyr 7B'},
+{id:'microsoft/Phi-3-mini-4k-instruct',name:'Phi-3 Mini'},
+{id:'google/gemma-2-2b-it',name:'Gemma 2 2B'},
+{id:'Qwen/Qwen2.5-3B-Instruct',name:'Qwen 2.5 3B'},
+{id:'meta-llama/Llama-3.2-3B-Instruct',name:'Llama 3.2 3B'},
+{id:'tiiuae/falcon-7b-instruct',name:'Falcon 7B'},
+{id:'mistralai/Mixtral-8x7B-Instruct-v0.1',name:'Mixtral 8x7B'}
+];
+
+async function testModel(m){
+try{
+const r=await fetch('https://api-inference.huggingface.co/models/'+m.id+'/v1/chat/completions',{
+method:'POST',
+headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
+body:JSON.stringify({model:m.id,messages:[{role:'system',content:'Eres asistente de Showco México, empresa de iluminación profesional. Responde en español, corto.'},{role:'user',content:'Hola, necesito iluminación para un concierto de 2000 personas al aire libre'}],max_tokens:100,temperature:0.7}),
+signal:AbortSignal.timeout(15000)
+});
+const data=await r.json();
+if(data.error)return{ok:false,err:data.error.message||JSON.stringify(data.error)};
+const txt=data.choices?.[0]?.message?.content;
+if(txt&&txt.length>5)return{ok:true,text:txt};
+return{ok:false,err:'Respuesta vacía: '+JSON.stringify(data).substring(0,200)};
+}catch(e){
+return{ok:false,err:e.message};
+}
+}
+
+async function runTests(){
+const div=document.getElementById('results');
+div.innerHTML='<p style="color:#f59e0b">⏳ Testando '+models.length+' modelos... (30-60 segundos)</p>';
+
+for(const m of models){
+const el=document.createElement('div');
+el.className='test';
+el.innerHTML='<h3>'+m.name+'</h3><div class="status wait">⏳ Testando...</div>';
+div.appendChild(el);
+
+const result=await testModel(m);
+if(result.ok){
+el.innerHTML='<h3>'+m.name+' ✅</h3><div class="status ok">✅ FUNCIONA</div><div class="response">'+result.text+'</div>';
+}else{
+el.innerHTML='<h3>'+m.name+' ❌</h3><div class="status fail">❌ Error: '+result.err+'</div>';
+}
+}
+div.innerHTML+='<p style="color:#4ade80;margin-top:12px">✅ Tests terminados. Copie le nom du modèle qui marche et dis-le moi.</p>';
+}
+</script>
+</body>
+</html>
