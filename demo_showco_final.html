@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Showco — Demo ONE IA</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#c8a415;--green:#25D366;--red:#e53935;--blue:#2196F3;--purple:#7c3aed;--dark:#0a0a0a;--card:#141414;--card2:#1c1c1c;--border:#252525;--text:#e8e8e8;--muted:#777}
+body{font-family:-apple-system,system-ui,'Segoe UI',sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#0e0e0e;border-top:1px solid var(--border);display:flex;z-index:900;padding:2px 0;max-width:100%}
+.bnav-btn{flex:1;padding:6px 2px;text-align:center;font-size:8px;color:var(--muted);background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;position:relative}
+.bnav-btn.act{color:var(--gold)}
+.bnav-btn .bi{font-size:18px}
+.bnav-btn .bdot{position:absolute;top:2px;right:calc(50% - 14px);width:7px;height:7px;background:var(--red);border-radius:50%;display:none}
+.bnav-btn.notif .bdot{display:block}
+/* VIEWS */
+.vw{display:none;padding-bottom:54px}
+.vw.act{display:block}
+
+/* === SHOWCO STORE === */
+.sc-top{background:linear-gradient(180deg,#111,var(--dark));padding:10px 14px;position:sticky;top:0;z-index:80;border-bottom:1px solid var(--border)}
+.sc-row1{display:flex;align-items:center;gap:8px}
+.sc-logo{font-size:18px;font-weight:900;color:var(--gold);letter-spacing:4px;text-transform:uppercase}
+.sc-logo span{color:#fff;font-weight:300;font-size:10px;letter-spacing:1px;display:block;margin-top:-2px}
+.sc-icons{margin-left:auto;display:flex;gap:14px;font-size:18px;align-items:center}
+.sc-icons button{background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;position:relative}
+.sc-cbadge{position:absolute;top:-5px;right:-7px;background:var(--red);color:#fff;font-size:7px;min-width:14px;height:14px;border-radius:7px;display:none;align-items:center;justify-content:center;font-weight:700}
+.sc-search{display:flex;margin-top:8px}
+.sc-search input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:#fff;font-size:11px}
+.sc-search input::placeholder{color:var(--muted)}
+
+.sc-banner{margin:10px 14px;background:linear-gradient(135deg,#1a1400,#0d0800);border:1px solid var(--gold)30;border-radius:10px;padding:14px;text-align:center}
+.sc-banner h2{font-size:14px;color:var(--gold);margin-bottom:4px}
+.sc-banner p{font-size:10px;color:var(--muted)}
+
+.sc-cats{display:flex;gap:6px;padding:8px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sc-cat{padding:6px 14px;border-radius:18px;font-size:10px;background:var(--card);color:var(--muted);border:1px solid var(--border);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.sc-cat.act{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+
+.sc-section{padding:0 14px;margin:12px 0}
+.sc-section h3{font-size:13px;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+
+.sc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.sc-item{background:var(--card);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.sc-item-badge{position:absolute;top:6px;left:6px;font-size:7px;padding:2px 6px;border-radius:4px;font-weight:700;z-index:2;color:#fff}
+.sc-item-badge.hot{background:var(--red)}
+.sc-item-badge.new{background:var(--green);color:#000}
+.sc-item-img{height:85px;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,#0d0d18,#161625);position:relative}
+.sc-item-info{padding:8px}
+.sc-item-brand{font-size:7px;color:var(--gold);font-weight:700;letter-spacing:1.5px}
+.sc-item-name{font-size:10px;font-weight:600;margin:2px 0;line-height:1.3;height:26px;overflow:hidden}
+.sc-item-stars{font-size:7px;color:#fbbf24}
+.sc-item-price{font-size:13px;color:var(--green);font-weight:700;margin:2px 0}
+.sc-item-price small{font-size:8px;color:var(--muted);font-weight:400}
+.sc-item-stock{font-size:7px;margin:2px 0}
+.sc-item-stock.ok{color:var(--green)}
+.sc-item-stock.low{color:orange}
+.sc-item-add{width:100%;padding:6px;background:var(--gold);color:#000;font-weight:700;font-size:9px;border:none;border-radius:6px;cursor:pointer}
+
+/* MODAL PRODUCT */
+.pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:850;overflow-y:auto}
+.pm-overlay.show{display:block}
+.pm-close{position:fixed;top:8px;right:12px;background:#333;color:#fff;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;z-index:851}
+.pm-img{height:200px;display:flex;align-items:center;justify-content:center;font-size:72px;background:linear-gradient(135deg,#0d0d18,#1a1a2e)}
+.pm-body{padding:14px}
+.pm-brand{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:2px}
+.pm-name{font-size:18px;font-weight:700;margin:4px 0}
+.pm-price{font-size:22px;color:var(--green);font-weight:800}
+.pm-price small{font-size:11px;color:var(--muted);font-weight:400}
+.pm-msi{font-size:10px;color:var(--muted);margin:4px 0}
+.pm-desc{font-size:11px;color:var(--muted);line-height:1.6;margin:10px 0}
+.pm-feats{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.pm-feat{background:var(--card2);border:1px solid var(--border);padding:3px 8px;border-radius:4px;font-size:8px}
+.pm-specs{margin:10px 0}
+.pm-spec{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px}
+.pm-spec-l{color:var(--muted)}
+.pm-qty{display:flex;align-items:center;gap:12px;justify-content:center;margin:12px 0}
+.pm-qty button{width:34px;height:34px;border-radius:50%;background:var(--card2);color:#fff;border:1px solid var(--border);font-size:16px;cursor:pointer}
+.pm-qty span{font-size:20px;font-weight:700;min-width:30px;text-align:center}
+.pm-addbtn{width:100%;padding:14px;background:var(--gold);color:#000;font-weight:700;font-size:14px;border:none;border-radius:10px;cursor:pointer}
+
+/* FLOATING CART */
+.fc{display:none;position:fixed;bottom:58px;left:12px;right:12px;background:var(--gold);color:#000;padding:10px 14px;border-radius:10px;z-index:100;box-shadow:0 4px 20px #c8a41530;cursor:pointer}
+.fc.show{display:flex;align-items:center;justify-content:space-between}
+.fc b{font-size:12px}
+.fc span{font-size:14px;font-weight:800}
+
+/* CHECKOUT */
+.ck{display:none;padding:14px;max-width:500px;margin:0 auto}
+.ck.show{display:block}
+.ck h2{font-size:15px;color:var(--gold);margin-bottom:10px}
+.ck-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px}
+.ck-e{font-size:18px}
+.ck-n{flex:1}.ck-n small{display:block;color:var(--muted);font-size:9px}
+.ck-p{color:var(--green);font-weight:600}
+.ck-r{display:flex;justify-content:space-between;padding:4px 0;font-size:10px;color:var(--muted)}
+.ck-tot{display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:800;border-top:1px solid var(--border)}
+.ck-tot span:last-child{color:var(--green)}
+.ck label{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 2px}
+.ck input,.ck select{width:100%;padding:9px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:#fff;font-size:11px}
+.ck input:focus,.ck select:focus{border-color:var(--gold);outline:none}
+.ck-paybtn{width:100%;padding:13px;background:var(--green);color:#fff;font-weight:700;font-size:13px;border:none;border-radius:8px;margin-top:10px;opacity:.5}
+.ck-abtn{width:100%;padding:10px;background:none;color:var(--red);font-size:11px;border:1px solid var(--red);border-radius:8px;margin-top:6px;cursor:pointer;font-weight:600}
+.ck-trust{display:flex;justify-content:center;gap:12px;margin-top:10px;font-size:8px;color:var(--muted)}
+
+/* CHATBOT WIDGET on store */
+.chat-widget{position:fixed;bottom:58px;right:12px;z-index:200}
+.chat-bubble{width:50px;height:50px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 4px 15px #c8a41540;border:none}
+.chat-window{display:none;position:fixed;bottom:58px;right:0;left:0;top:0;background:var(--dark);z-index:850;flex-direction:column}
+.chat-window.show{display:flex}
+.cw-head{background:var(--card);padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.cw-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.cw-av{width:34px;height:34px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#000}
+.cw-nm{font-size:12px;font-weight:600}
+.cw-st{font-size:8px;color:var(--green)}
+.cw-ai{margin-left:auto;font-size:7px;color:var(--purple);text-align:right;line-height:1.3}
+.cw-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:4px}
+.cw-b{max-width:84%;padding:7px 10px;border-radius:8px;font-size:11px;line-height:1.6;word-wrap:break-word}
+.cw-b.bot{background:var(--card2);align-self:flex-start;border-bottom-left-radius:2px}
+.cw-b.user{background:#005c4b;color:#fff;align-self:flex-end;border-bottom-right-radius:2px}
+.cw-b .cwt{font-size:7px;color:var(--muted);margin-top:2px}
+.cw-b.bot .cwt{text-align:left}
+.cw-b .cwt{text-align:right}
+.cw-sys{align-self:center;background:var(--card);color:var(--muted);font-size:8px;padding:2px 8px;border-radius:4px}
+.cw-typing{display:none;align-self:flex-start;padding:4px 10px}
+.cw-typing.show{display:flex}
+.cw-typing span{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:tk 1.4s infinite;margin:0 2px}
+.cw-typing span:nth-child(2){animation-delay:.2s}
+.cw-typing span:nth-child(3){animation-delay:.4s}
+@keyframes tk{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.cw-qr{display:flex;flex-wrap:wrap;gap:4px;align-self:flex-start;margin:4px 0}
+.cw-qr button{background:var(--card);border:1px solid var(--green);color:var(--green);padding:4px 10px;border-radius:12px;font-size:8px;cursor:pointer}
+.cw-bar{background:var(--card);padding:6px 10px;display:flex;gap:6px;align-items:center;border-top:1px solid var(--border)}
+.cw-bar input{flex:1;background:var(--dark);border:1px solid var(--border);border-radius:16px;padding:8px 12px;color:#fff;font-size:11px;outline:none}
+.cw-bar button{width:34px;height:34px;background:var(--green);border:none;border-radius:50%;cursor:pointer;font-size:14px}
+
+/* === WORKFLOW === */
+.wf-top{background:var(--card);padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:50}
+.wf-logo{font-size:14px;font-weight:700;color:#ff6d5a}
+.wf-st{margin-left:auto;font-size:8px;padding:2px 8px;border-radius:6px}
+.wf-bd{padding:14px;max-width:500px;margin:0 auto}
+.wn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:4px 0;display:flex;align-items:center;gap:8px;opacity:.15;transition:.3s}
+.wn.on{opacity:1;border-color:var(--green);box-shadow:0 0 8px #25D36615}
+.wn.ok{opacity:.7;border-color:var(--gold)}
+.wi{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.wn-t{font-size:10px;font-weight:600}
+.wn-d{font-size:8px;color:var(--muted)}
+.wn-s{margin-left:auto;font-size:7px;color:var(--green);display:none}
+.wn.ok .wn-s{display:block}
+.wa-arr{text-align:center;color:#222;font-size:11px}
+.wa-arr.on{color:var(--green)}
+.wj{background:#060610;border:1px solid var(--border);border-radius:5px;padding:6px;margin:3px 0;font-family:monospace;font-size:7px;color:var(--green);line-height:1.4;display:none;white-space:pre;overflow-x:auto}
+.wj.show{display:block}
+.wsplit{display:flex;gap:4px;margin:4px 0}
+.wsplit .wn{flex:1;margin:0}
+
+/* === WHATSAPP / SMS / EMAIL VIEWS === */
+.msg-top{background:var(--card);padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.msg-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#000}
+.msg-nm{font-size:12px;font-weight:600}
+.msg-sub{font-size:8px}
+.msg-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:4px;min-height:calc(100vh - 120px)}
+.mb{max-width:84%;padding:7px 10px;border-radius:8px;font-size:11px;line-height:1.6}
+.mb.bot{background:var(--card2);align-self:flex-start;border-bottom-left-radius:2px}
+.mb.user{align-self:flex-end;border-bottom-right-radius:2px}
+.mb .mt{font-size:7px;color:var(--muted);margin-top:2px}
+.mb-sys{align-self:center;font-size:8px;color:var(--muted);background:var(--card);padding:2px 8px;border-radius:4px}
+.msg-bar{background:var(--card);padding:6px 10px;display:flex;gap:6px;align-items:center;border-top:1px solid var(--border);position:sticky;bottom:54px}
+.msg-bar input{flex:1;background:var(--dark);border:1px solid var(--border);border-radius:16px;padding:8px 12px;color:#fff;font-size:11px;outline:none}
+.msg-bar button{width:34px;height:34px;border:none;border-radius:50%;cursor:pointer;font-size:14px}
+.msg-qr{display:flex;flex-wrap:wrap;gap:4px;align-self:flex-start}
+.msg-qr button{background:var(--card);border:1px solid;padding:4px 9px;border-radius:12px;font-size:8px;cursor:pointer}
+
+/* EMAIL VIEW */
+.eml{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:8px 14px}
+.eml-hd{background:var(--card2);padding:8px 10px;border-bottom:1px solid var(--border)}
+.eml-from{font-size:8px;color:var(--muted)}
+.eml-subj{font-size:11px;font-weight:600;color:var(--blue);margin-top:2px}
+.eml-bd{padding:10px;font-size:10px;line-height:1.7}
+.eml-hl{background:var(--gold)08;border-left:2px solid var(--gold);padding:6px 10px;margin:6px 0;border-radius:0 4px 4px 0;font-size:10px}
+.eml-prods{background:var(--card2);border-radius:6px;padding:8px;margin:6px 0}
+.eml-prod{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:10px}
+.eml-prod .ep-p{margin-left:auto;color:var(--green);font-weight:600}
+.eml-cta{display:block;background:var(--gold);color:#000;text-align:center;padding:10px;font-size:12px;font-weight:700;margin:6px 10px 10px;border-radius:6px}
+.eml-ft{padding:6px 10px;border-top:1px solid var(--border);font-size:7px;color:var(--muted);text-align:center}
+.eml-future{opacity:.4;margin:6px 14px}
+
+/* CRM */
+.crm-top{background:var(--card);padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.crm-title{font-size:14px;font-weight:700;color:var(--blue)}
+.crm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:10px 14px}
+.cs{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center}
+.cs .cv{font-size:16px;font-weight:800}
+.cs .cl{font-size:7px;color:var(--muted);text-transform:uppercase}
+.crm-section{padding:0 14px;margin:10px 0}
+.crm-section h3{font-size:11px;color:var(--gold);margin-bottom:6px}
+.crm-lead{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin:6px 0}
+.cl-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cl-av{width:26px;height:26px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.cl-name{font-size:11px;font-weight:600}
+.cl-stage{margin-left:auto;font-size:7px;padding:2px 6px;border-radius:6px;font-weight:700}
+.cl-stage.hot{background:#e5393520;color:var(--red)}
+.cl-stage.won{background:#25D36620;color:var(--green)}
+.cl-detail{font-size:9px;color:var(--muted);line-height:1.5}
+.cl-timeline{margin:6px 0}
+.cl-ev{display:flex;gap:6px;padding:4px 0;border-left:2px solid var(--border);margin-left:6px;padding-left:10px;font-size:9px;position:relative}
+.cl-ev::before{content:'';position:absolute;left:-4px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--border)}
+.cl-ev.r::before{background:var(--red)}
+.cl-ev.g::before{background:var(--green)}
+.cl-ev.b::before{background:var(--blue)}
+.cl-ev.o::before{background:orange}
+.cl-ev.p::before{background:var(--purple)}
+.cl-ev-t{min-width:36px;color:var(--muted);font-size:8px}
+.cl-acts{display:flex;gap:4px;margin-top:6px}
+.cl-acts button{padding:3px 8px;border-radius:4px;font-size:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);cursor:pointer}
+
+/* NOTIF TOAST */
+.toast{display:none;position:fixed;top:8px;left:8px;right:8px;border-radius:12px;padding:10px;z-index:960;animation:tIn .3s ease}
+.toast.show{display:block}
+@keyframes tIn{from{transform:translateY(-30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.toast.wa{background:#0d1f0d;border:1px solid var(--green)}
+.toast.em{background:#0d0d1f;border:1px solid var(--blue)}
+.toast.sms{background:#1f1a0d;border:1px solid orange}
+.toast .th{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:10px;font-weight:600}
+.toast .tb{font-size:9px;color:#ccc;line-height:1.3}
+</style>
+</head>
+<body>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+<button class="bnav-btn act" onclick="go('shop')" id="t-shop"><span class="bi">🛒</span>Tienda<span class="bdot"></span></button>
+<button class="bnav-btn" onclick="go('wf')" id="t-wf"><span class="bi">⚡</span>n8n<span class="bdot"></span></button>
+<button class="bnav-btn" onclick="go('wa')" id="t-wa"><span class="bi">💬</span>WhatsApp<span class="bdot"></span></button>
+<button class="bnav-btn" onclick="go('sms')" id="t-sms"><span class="bi">📱</span>SMS<span class="bdot"></span></button>
+<button class="bnav-btn" onclick="go('email')" id="t-email"><span class="bi">📧</span>Email<span class="bdot"></span></button>
+<button class="bnav-btn" onclick="go('crm')" id="t-crm"><span class="bi">📊</span>CRM<span class="bdot"></span></button>
+</div>
+
+<!-- TOASTS -->
+<div class="toast wa" id="toast-wa"><div class="th">💬 WhatsApp</div><div class="tb" id="toast-wa-b"></div></div>
+<div class="toast sms" id="toast-sms"><div class="th">📱 SMS</div><div class="tb" id="toast-sms-b"></div></div>
+<div class="toast em" id="toast-em"><div class="th">📧 Email</div><div class="tb" id="toast-em-b"></div></div>
+
+<!-- ====== VIEW: SHOP ====== -->
+<div class="vw act" id="v-shop">
+<div class="sc-top">
+<div class="sc-row1">
+<div class="sc-logo">SHOWCO<span>La cara oculta del espectáculo</span></div>
+<div class="sc-icons">
+<button onclick="openCW()">💬</button>
+<button onclick="openCK()" id="cartBtn">🛒<span class="sc-cbadge" id="cBadge">0</span></button>
+</div>
+</div>
+<div class="sc-search"><input placeholder="🔍 Buscar equipo profesional..." readonly></div>
+</div>
+
+<div class="sc-banner">
+<h2>🎯 Distribuidor exclusivo en México</h2>
+<p>Robe · Avolites · FBT · SoundBarrier · +15 marcas · 25 años de experiencia<br>📦 Envío gratis +$50K · 💳 Hasta 12 MSI · 🏪 5 sucursales</p>
+</div>
+
+<div class="sc-cats" id="catBar"></div>
+
+<div class="sc-section"><h3>⭐ Productos destacados</h3></div>
+<div class="sc-grid" id="shopGrid"></div>
+
+<!-- FLOATING CART -->
+<div class="fc" id="fCart" onclick="openCK()"><b>🛒 Ver carrito (<span id="fcN">0</span>)</b><span id="fcT">$0</span></div>
+
+<!-- CHECKOUT -->
+<div class="ck" id="ckV">
+<h2>🛒 Finalizar compra</h2>
+<div id="ckItems"></div>
+<div class="ck-r"><span>Subtotal</span><span id="ckSub"></span></div>
+<div class="ck-r"><span>IVA 16%</span><span id="ckIva"></span></div>
+<div class="ck-r"><span>Envío</span><span style="color:var(--green)">GRATIS ✓</span></div>
+<div class="ck-tot"><span>Total</span><span id="ckTot"></span></div>
+<label>Nombre</label><input id="cName" value="Carlos Mendoza">
+<label>Email</label><input id="cEmail" value="carlos@eventospro.mx">
+<label>WhatsApp</label><input id="cPhone" value="+52 55 1234 5678">
+<label>Sucursal / Ciudad</label>
+<select id="cCity"><option>Monterrey</option><option>CDMX</option><option>Guadalajara</option><option>Cancún</option><option>Otra ciudad</option></select>
+<label>Método de pago</label>
+<select><option>💳 Tarjeta crédito (MSI)</option><option>🏦 Transferencia SPEI</option><option>💰 Depósito</option><option>🅿️ PayPal</option></select>
+<button class="ck-paybtn" disabled>💳 Procesando...</button>
+<button class="ck-abtn" onclick="abandon()">✕ Salir sin comprar (simular abandono)</button>
+<div class="ck-trust"><span>🔒 SSL</span><span>🛡️ Protegido</span><span>📦 Asegurado</span><span>🧾 CFDI</span></div>
+</div>
+
+<!-- CHAT WIDGET -->
+<div class="chat-widget" id="chatWidget">
+<button class="chat-bubble" onclick="openCW()">💬</button>
+</div>
+<div class="chat-window" id="chatWin">
+<div class="cw-head">
+<button class="cw-close" onclick="closeCW()">✕</button>
+<div class="cw-av">S</div>
+<div><div class="cw-nm">Showco IA</div><div class="cw-st">🟢 en línea</div></div>
+<div class="cw-ai">Powered by<br><b>HuggingFace 🤗</b></div>
+</div>
+<div class="cw-body" id="cwBody"></div>
+<div class="cw-typing" id="cwTyp"><span></span><span></span><span></span></div>
+<div class="cw-bar">
+<input id="cwIn" placeholder="Pregunta sobre productos..." autocomplete="off">
+<button onclick="cwSend()">➤</button>
+</div>
+</div>
+</div>
+
+<!-- ====== VIEW: WORKFLOW ====== -->
+<div class="vw" id="v-wf">
+<div class="wf-top"><div class="wf-logo">⚡ n8n Workflow</div><div class="wf-st" id="wfSt" style="background:var(--card);color:var(--muted)">⏸ Esperando</div></div>
+<div class="wf-bd" id="wfBd">
+<div class="wn" id="n1"><div class="wi" style="background:#96bf4820;color:#96bf48">🛒</div><div><div class="wn-t">Shopify Trigger</div><div class="wn-d">Carrito abandonado</div></div><div class="wn-s">✓</div></div>
+<div class="wa-arr" id="a1">↓</div><div class="wj" id="j1"></div>
+<div class="wn" id="n2"><div class="wi" style="background:#f59e0b20;color:#f59e0b">⏱</div><div><div class="wn-t">Delay 30min</div><div class="wn-d">Esperar</div></div><div class="wn-s">✓</div></div>
+<div class="wa-arr" id="a2">↓</div>
+<div class="wn" id="n3"><div class="wi" style="background:#7c3aed20;color:#7c3aed">🧠</div><div><div class="wn-t">HuggingFace IA</div><div class="wn-d">Generar mensajes</div></div><div class="wn-s">✓</div></div>
+<div class="wa-arr" id="a3">↓</div><div class="wj" id="j2"></div>
+<div class="wsplit">
+<div class="wn" id="n4"><div class="wi" style="background:#25D36620;color:#25D366">💬</div><div><div class="wn-t">WhatsApp</div><div class="wn-d">Enviar</div></div><div class="wn-s">✓</div></div>
+<div class="wn" id="n5"><div class="wi" style="background:#2196F320;color:#2196F3">📧</div><div><div class="wn-t">Email</div><div class="wn-d">SMTP</div></div><div class="wn-s">✓</div></div>
+<div class="wn" id="n6"><div class="wi" style="background:orange20;color:orange">📱</div><div><div class="wn-t">SMS</div><div class="wn-d">Twilio</div></div><div class="wn-s">✓</div></div>
+</div>
+<div class="wa-arr" id="a4">↓</div>
+<div class="wn" id="n7"><div class="wi" style="background:#ec489920;color:#ec4899">📊</div><div><div class="wn-t">CRM Update</div><div class="wn-d">Pipeline</div></div><div class="wn-s">✓</div></div>
+</div>
+</div>
+
+<!-- ====== VIEW: WHATSAPP ====== -->
+<div class="vw" id="v-wa">
+<div class="msg-top">
+<div class="msg-av" style="background:var(--green)">S</div>
+<div><div class="msg-nm">Showco — Asistente IA</div><div class="msg-sub" style="color:var(--green)">🟢 en línea · WhatsApp Business</div></div>
+</div>
+<div class="msg-body" id="waBody"></div>
+<div class="cw-typing" id="waTyp"><span></span><span></span><span></span></div>
+<div class="msg-bar">
+<input id="waIn" placeholder="Escribe un mensaje..." autocomplete="off">
+<button style="background:var(--green)" onclick="waSend()">➤</button>
+</div>
+</div>
+
+<!-- ====== VIEW: SMS ====== -->
+<div class="vw" id="v-sms">
+<div class="msg-top">
+<div class="msg-av" style="background:orange;color:#000">S</div>
+<div><div class="msg-nm">Showco</div><div class="msg-sub" style="color:orange">SMS · +52 55 5000 9480</div></div>
+</div>
+<div class="msg-body" id="smsBody"><p style="text-align:center;color:var(--muted);font-size:10px;margin-top:40px">Los SMS aparecerán aquí después del abandono</p></div>
+</div>
+
+<!-- ====== VIEW: EMAIL ====== -->
+<div class="vw" id="v-email">
+<div class="msg-top"><div class="msg-av" style="background:var(--blue)">📧</div><div><div class="msg-nm">Email Marketing</div><div class="msg-sub" style="color:var(--blue)">Secuencia automática</div></div></div>
+<div id="emBody"><p style="text-align:center;color:var(--muted);font-size:10px;margin:40px 14px">Los emails aparecerán aquí después del abandono</p></div>
+</div>
+
+<!-- ====== VIEW: CRM ====== -->
+<div class="vw" id="v-crm">
+<div class="crm-top"><div class="crm-title">📊 CRM — Pipeline</div></div>
+<div class="crm-stats">
+<div class="cs"><div class="cv" style="color:var(--green)" id="csLeads">0</div><div class="cl">Leads</div></div>
+<div class="cs"><div class="cv" style="color:orange" id="csCot">0</div><div class="cl">Cotiz.</div></div>
+<div class="cs"><div class="cv" style="color:var(--blue)" id="csMsg">0</div><div class="cl">Mensajes</div></div>
+<div class="cs"><div class="cv" style="color:var(--green)" id="csRec">$0</div><div class="cl">Recup.</div></div>
+</div>
+<div id="crmPipe" class="crm-section"><h3>Pipeline</h3><p style="font-size:10px;color:var(--muted)">Esperando actividad...</p></div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="pm-overlay" id="pmO">
+<button class="pm-close" onclick="closePM()">✕</button>
+<div class="pm-img" id="pmI"></div>
+<div class="pm-body">
+<div class="pm-brand" id="pmB"></div>
+<div class="pm-name" id="pmN"></div>
+<div class="pm-price" id="pmP"></div>
+<div class="pm-msi" id="pmM"></div>
+<div class="pm-desc" id="pmD"></div>
+<div class="pm-feats" id="pmF"></div>
+<div class="pm-specs" id="pmS"></div>
+<div class="pm-qty"><button onclick="pq(-1)">−</button><span id="pmQ">1</span><button onclick="pq(1)">+</button></div>
+<button class="pm-addbtn" id="pmA">🛒 Agregar al carrito</button>
+</div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const P=[
+{id:1,e:'🔦',b:'ROBE',n:'iFORTE® IP65',p:185000,d:'Luminaria dinámica para exterior. Resistente a lluvia, polvo y humo.',c:'ilum',s:12,bg:'hot',r:4.9,sp:[['Potencia','1,150W LED'],['IP','65 - Full Body'],['Peso','39.5 kg'],['Zoom','3.8°-56°']],f:['IP65','CMY+CTO','Framing','Hot-Swap']},
+{id:2,e:'🎛️',b:'AVOLITES',n:'Diamond 9 330',p:420000,d:'Consola insignia. 3 pantallas Full HD. Para espectáculos exigentes.',c:'cons',s:4,bg:'',r:5.0,sp:[['Pantallas','3× Full HD'],['DMX','64 universos'],['Faders','30 motor.'],['Software','Titan v16']],f:['Multi-user','ArtNet','Synergy']},
+{id:3,e:'💡',b:'ROBE',n:'TetraX™',p:145000,d:'Efecto visual con rotación 360°. Factor X de tu show.',c:'ilum',s:8,bg:'new',r:4.8,sp:[['LEDs','4×60W RGBW'],['Rotación','360° cont.'],['Peso','21.6 kg']],f:['Pixel Map','RGBW','Endless Rot.']},
+{id:4,e:'🔊',b:'SOUNDBARRIER',n:'Sub Activo 18" 600W',p:18176,d:'Subwoofer ventilado. Graves potentes para eventos.',c:'audio',s:20,bg:'',r:4.7,sp:[['Driver','18"'],['Potencia','600W RMS'],['SPL','128 dB']],f:['Class D','DSP','Flying']},
+{id:5,e:'🔊',b:'SOUNDBARRIER',n:'Altavoz 15" 400W',p:9165,d:'Bidireccional rango completo. Cristalino.',c:'audio',s:15,bg:'',r:4.6,sp:[['Driver','15"+1.4" HF'],['Potencia','400W'],['SPL','124 dB']],f:['Bi-amp','DSP','Ligero']},
+{id:6,e:'🎛️',b:'AVOLITES',n:'T2 Titan',p:62000,d:'Compacto. Titan completo en formato portátil.',c:'cons',s:6,bg:'',r:4.8,sp:[['Faders','10'],['DMX','2 líneas'],['Touch','Sí']],f:['Portátil','ArtNet','USB']},
+{id:7,e:'🌈',b:'SHOWCOPRO',n:'Color Blender Plus',p:28000,d:'Wash LED 18×8W IP65. Arquitectónico.',c:'ilum',s:30,bg:'',r:4.5,sp:[['LEDs','18×8W RGBW'],['IP','65'],['Ángulo','25°']],f:['IP65','RGBW','Silencioso']},
+{id:8,e:'📺',b:'SHOWCO',n:'Panel LED P3.9',p:35000,d:'Alta resolución para escenarios y TV.',c:'video',s:50,bg:'new',r:4.7,sp:[['Pitch','3.9mm'],['Brillo','1500 nits'],['Refresh','3840Hz']],f:['Indoor','Curvo','HDR']},
+{id:9,e:'🔍',b:'ROBE',n:'RoboSpot™',p:95000,d:'Seguimiento remoto. Hasta 12 luminarias.',c:'ilum',s:5,bg:'',r:4.9,sp:[['Control','12 lumin.'],['Latencia','<1 frame'],['Display','HD']],f:['Remote','Multi-Fix','Safe']},
+{id:10,e:'🎛️',b:'AVOLITES',n:'T1 Titan',p:38000,d:'Todo Titan en formato mini. 1 DMX.',c:'cons',s:10,bg:'',r:4.6,sp:[['Faders','Virtuales'],['DMX','1 línea'],['Peso','2.1 kg']],f:['Ultra-portátil','USB','Touch']},
+{id:11,e:'💨',b:'SMOKE FACTORY',n:'Captain D 1500W',p:42000,d:'Máquina de humo pro para grandes venues.',c:'acc',s:7,bg:'',r:4.4,sp:[['Potencia','1500W'],['Caudal','600 m³/min'],['DMX','Sí']],f:['DMX','Timer','Quick Heat']},
+{id:12,e:'🔌',b:'LUMINEX',n:'LumiNode 12',p:55000,d:'Nodo Ethernet-DMX pro. 12 puertos.',c:'acc',s:9,bg:'',r:4.8,sp:[['Puertos','12×DMX'],['Ethernet','2×Gig'],['Web','Config remota']],f:['PoE','RDM','Redundancy']}
+];
+
+const CATS=[{id:'all',l:'Todo',i:''},{id:'ilum',l:'Iluminación',i:'🔦'},{id:'audio',l:'Audio',i:'🔊'},{id:'cons',l:'Consolas',i:'🎛️'},{id:'video',l:'Video',i:'📺'},{id:'acc',l:'Accesorios',i:'🔧'}];
+
+let cart=[],curCat='all',pmP=null,pmQV=1;
+
+/* ===== NAV ===== */
+function go(v){
+document.querySelectorAll('.vw').forEach(el=>el.classList.remove('act'));
+document.querySelectorAll('.bnav-btn').forEach(el=>el.classList.remove('act'));
+document.getElementById('v-'+v).classList.add('act');
+document.getElementById('t-'+v).classList.add('act');
+document.getElementById('t-'+v).classList.remove('notif');
+}
+
+/* ===== STORE ===== */
+function renderCats(){
+const bar=document.getElementById('catBar');
+bar.innerHTML=CATS.map(c=>`<div class="sc-cat ${c.id==='all'?'act':''}" onclick="filterC('${c.id}',this)">${c.i} ${c.l}</div>`).join('');
+}
+function filterC(c,el){curCat=c;document.querySelectorAll('.sc-cat').forEach(e=>e.classList.remove('act'));el.classList.add('act');renderGrid()}
+function renderGrid(){
+const g=document.getElementById('shopGrid');
+const items=curCat==='all'?P:P.filter(p=>p.c===curCat);
+g.innerHTML=items.map(p=>`
+<div class="sc-item" onclick="openPM(${p.id})">
+${p.bg?`<div class="sc-item-badge ${p.bg}">${p.bg==='hot'?'🔥 HOT':'✨ NUEVO'}</div>`:''}
+<div class="sc-item-img">${p.e}</div>
+<div class="sc-item-info">
+<div class="sc-item-brand">${p.b}</div>
+<div class="sc-item-name">${p.n}</div>
+<div class="sc-item-stars">${'★'.repeat(Math.floor(p.r))} ${p.r}</div>
+<div class="sc-item-price">$${p.p.toLocaleString()} <small>MXN</small></div>
+<div class="sc-item-stock ${p.s<6?'low':'ok'}">${p.s<6?'⚠ Solo '+p.s:'✓ '+p.s+' en stock'}</div>
+<button class="sc-item-add" onclick="event.stopPropagation();addC(${p.id},1)">+ Agregar</button>
+</div></div>`).join('');
+}
+
+function openPM(id){pmP=P.find(x=>x.id===id);pmQV=1;
+document.getElementById('pmI').textContent=pmP.e;
+document.getElementById('pmB').textContent=pmP.b;
+document.getElementById('pmN').textContent=pmP.n;
+document.getElementById('pmP').innerHTML='$'+pmP.p.toLocaleString()+' <small>MXN + IVA</small>';
+document.getElementById('pmM').textContent='💳 12 MSI de $'+Math.round(pmP.p*1.16/12).toLocaleString()+'/mes';
+document.getElementById('pmD').textContent=pmP.d;
+document.getElementById('pmQ').textContent='1';
+document.getElementById('pmS').innerHTML=pmP.sp.map(s=>`<div class="pm-spec"><span class="pm-spec-l">${s[0]}</span><span>${s[1]}</span></div>`).join('');
+document.getElementById('pmF').innerHTML=pmP.f.map(f=>`<div class="pm-feat">${f}</div>`).join('');
+document.getElementById('pmA').onclick=()=>{addC(pmP.id,pmQV);closePM()};
+document.getElementById('pmO').classList.add('show')}
+function closePM(){document.getElementById('pmO').classList.remove('show')}
+function pq(d){pmQV=Math.max(1,pmQV+d);document.getElementById('pmQ').textContent=pmQV}
+
+function addC(id,q){const ex=cart.find(c=>c.id===id);if(ex)ex.q+=q;else cart.push({id,q});updCart()}
+function updCart(){
+const n=cart.reduce((s,c)=>s+c.q,0);
+const t=cart.reduce((s,c)=>{const p=P.find(x=>x.id===c.id);return s+p.p*c.q},0);
+const b=document.getElementById('cBadge');b.textContent=n;b.style.display=n?'flex':'none';
+const f=document.getElementById('fCart');
+if(n){f.classList.add('show');document.getElementById('fcN').textContent=n;document.getElementById('fcT').textContent='$'+t.toLocaleString()}else f.classList.remove('show');
+}
+
+function openCK(){
+if(!cart.length)return;
+document.getElementById('shopGrid').style.display='none';
+document.querySelector('.sc-cats').style.display='none';
+document.querySelector('.sc-banner').style.display='none';
+document.querySelector('.sc-section').style.display='none';
+document.getElementById('fCart').classList.remove('show');
+document.getElementById('chatWidget').style.display='none';
+const ck=document.getElementById('ckV');ck.classList.add('show');
+const items=document.getElementById('ckItems');items.innerHTML='';
+let sub=0;
+cart.forEach(c=>{const p=P.find(x=>x.id===c.id);sub+=p.p*c.q;
+items.innerHTML+=`<div class="ck-item"><span class="ck-e">${p.e}</span><div class="ck-n">${c.q}× ${p.n}<small>${p.b}</small></div><span class="ck-p">$${(p.p*c.q).toLocaleString()}</span></div>`;
+});
+document.getElementById('ckSub').textContent='$'+sub.toLocaleString();
+document.getElementById('ckIva').textContent='$'+Math.round(sub*.16).toLocaleString();
+document.getElementById('ckTot').textContent='$'+Math.round(sub*1.16).toLocaleString()+' MXN';
+}
+
+/* ===== ABANDON ===== */
+function abandon(){
+const D={name:document.getElementById('cName').value,email:document.getElementById('cEmail').value,phone:document.getElementById('cPhone').value,city:document.getElementById('cCity').value,
+items:cart.map(c=>{const p=P.find(x=>x.id===c.id);return{...p,qty:c.q}}),
+sub:cart.reduce((s,c)=>{const p=P.find(x=>x.id===c.id);return s+p.p*c.q},0)};
+D.total=Math.round(D.sub*1.16);
+window._D=D;
+go('wf');runWF(D);
+}
+
+/* ===== WORKFLOW ===== */
+function runWF(D){
+const fn=D.name.split(' ')[0];
+const iStr=D.items.map(i=>i.qty+'× '+i.n).join(', ');
+document.getElementById('wfSt').textContent='▶ Ejecutando';document.getElementById('wfSt').style.background='#25D36620';document.getElementById('wfSt').style.color='var(--green)';
+document.getElementById('j1').textContent=JSON.stringify({event:"cart.abandoned",ts:new Date().toISOString(),customer:{name:D.name,email:D.email,whatsapp:D.phone,city:D.city},cart:{items:D.items.map(i=>({product:i.b+' '+i.n,qty:i.qty,price:i.p})),subtotal:D.sub,total:D.total}},null,2);
+document.getElementById('j2').textContent=JSON.stringify({model:"HuggingFace/mistralai/Mistral-7B",channels:["whatsapp","email","sms"],output:{whatsapp:"Hola "+fn+" 👋 Vi que estabas armando un pedido: "+iStr+". ¿Te quedó alguna duda?",email_subject:fn+", tu equipo te espera en Showco",sms:fn+", tu carrito en Showco ($"+D.total.toLocaleString()+") te espera. Completa tu compra: showco.com.mx/cart/"+Math.random().toString(36).substr(2,8)}},null,2);
+
+const nodes=['n1','n2','n3','n4','n5','n6','n7'];
+const arrows=['a1','a2','a3','a4'];
+const jsons=['j1','','j2','','','',''];
+let i=0;
+function next(){
+if(i>=nodes.length){
+document.getElementById('wfSt').textContent='✓ Completado';
+setTimeout(()=>{
+// SEND ALL NOTIFICATIONS
+showT('em',fn+', tu equipo profesional te espera — $'+D.total.toLocaleString()+' MXN');addN('t-email');
+setTimeout(()=>{showT('sms',fn+', tu carrito en Showco te espera. Completa tu compra.');addN('t-sms')},800);
+setTimeout(()=>{showT('wa','Hola '+fn+' 👋 Vi que estabas armando un pedido. ¿Te quedó alguna duda?');addN('t-wa');addN('t-crm')},1600);
+fillWA(D);fillSMS(D);fillEmail(D);fillCRM(D);
+},500);return;
+}
+const nd=document.getElementById(nodes[i]);nd.classList.add('on');
+if(i>0){document.getElementById(nodes[i-1]).classList.remove('on');document.getElementById(nodes[i-1]).classList.add('ok')}
+if(arrows[i])document.getElementById(arrows[i]).classList.add('on');
+if(jsons[i])document.getElementById(jsons[i]).classList.add('show');
+i++;setTimeout(next,800);
+}
+setTimeout(next,300);
+}
+
+function showT(type,body){const el=document.getElementById('toast-'+type);document.getElementById('toast-'+type+'-b').textContent=body;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500)}
+function addN(id){document.getElementById(id).classList.add('notif')}
+
+/* ===== WHATSAPP ===== */
+const waB=document.getElementById('waBody'),waI=document.getElementById('waIn');
+function wt(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0')}
+function waM(t,type){const d=document.createElement('div');d.className='mb '+type;d.style.background=type==='bot'?'var(--card2)':'#005c4b';d.style.color=type==='bot'?'var(--text)':'#fff';d.innerHTML=t.replace(/\n/g,'<br>')+'<div class="mt">'+wt()+(type==='bot'?' ✓✓':'')+'</div>';waB.appendChild(d);waB.scrollTop=1e6}
+function waSys(t){const d=document.createElement('div');d.className='mb-sys';d.textContent=t;waB.appendChild(d)}
+function waQR(opts){const r=document.createElement('div');r.className='msg-qr';opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.style.borderColor='var(--green)';b.style.color='var(--green)';b.onclick=()=>{waI.value=o;waSend();r.remove()};r.appendChild(b)});waB.appendChild(r);waB.scrollTop=1e6}
+
+function fillWA(D){
+const fn=D.name.split(' ')[0];
+const iStr=D.items.map(i=>i.e+' '+i.qty+'× '+i.n).join('\n');
+waSys('Mensaje automático · Carrito abandonado');
+setTimeout(()=>{waM('Hola '+fn+' 👋\n\nVi que estabas armando un pedido:\n\n'+iStr+'\n\n💰 Total: $'+D.total.toLocaleString()+' MXN\n📦 Envío gratis a '+D.city+'\n\n¿Te quedó alguna duda? Puedo ayudarte con stock, cotización formal o conectarte con un especialista 📋','bot');
+setTimeout(()=>waQR(['Cotización formal','¿Stock en '+D.city+'?','Descuento volumen','MSI disponibles','Hablar con asesor']),400)},600);
+}
+
+const HF_TOKEN='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';
+const HF_MODEL='mistralai/Mistral-7B-Instruct-v0.3';
+const SYS_PROMPT='Eres el asistente IA de Showco México, empresa de iluminación, audio y video profesional con 25 años. Distribuidores exclusivos de Robe, Avolites, FBT, SoundBarrier. 5 tiendas: CDMX(2), GDL, MTY, Cancún. Responde en español, corto, profesional. Si el cliente abandonó un carrito, intenta recuperar la venta con empatía.';
+
+async function callAI(msg,ctx){
+try{
+const r=await fetch('https://api-inference.huggingface.co/models/'+HF_MODEL+'/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+HF_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({model:HF_MODEL,messages:[{role:'system',content:SYS_PROMPT+(ctx?'\nContexto: '+ctx:'')},{role:'user',content:msg}],max_tokens:300,temperature:.7})});
+if(!r.ok)throw 0;const d=await r.json();return d.choices?.[0]?.message?.content||fb(msg);
+}catch(e){return fb(msg)}
+}
+
+function fb(q){q=q.toLowerCase();
+if(q.match(/hola|hey|buenas/))return'¡Hola! 👋 Soy el asistente IA de Showco. ¿En qué puedo ayudarte?';
+if(q.match(/cotiz|precio|cuanto/))return'📋 Para cotizarte necesito: ¿Qué equipo? ¿Tipo de evento? ¿Cuántas personas? ¿Ciudad?';
+if(q.match(/stock|disponib/))return'📦 Verifico al instante. ¿Qué producto y en qué sucursal?';
+if(q.match(/envio/))return'📦 Envío gratis +$50K MXN. 3-5 días hábiles.';
+if(q.match(/msi|meses/))return'💳 Hasta 12 MSI con tarjetas participantes.';
+if(q.match(/descuento/))return'💎 Para volumen ofrecemos -5%. ¿Cuántas unidades necesitas?';
+if(q.match(/sucursal|tienda|donde/))return'🏪 CDMX (2), Guadalajara, Monterrey, Cancún. ¿Cuál te queda cerca?';
+if(q.match(/gracias/))return'¡Con gusto! 😊 Aquí estoy 24/7. ¡Éxito con tu evento! 🎶';
+return'Soy el asistente IA de Showco. Puedo ayudarte con 🔦 Iluminación, 🔊 Audio, 🎛️ Consolas, 📋 Cotizaciones, 📍 Tiendas.'}
+
+async function waSend(){
+const t=waI.value.trim();if(!t)return;waM(t,'user');waI.value='';
+document.getElementById('waTyp').classList.add('show');
+const D=window._D;let ctx='';
+if(D)ctx='Cliente '+D.name+' de '+D.city+' abandonó carrito: '+D.items.map(i=>i.qty+'× '+i.n).join(', ')+'. Total: $'+D.total.toLocaleString();
+const resp=await callAI(t,ctx);
+document.getElementById('waTyp').classList.remove('show');
+waM(resp,'bot');
+}
+waI.addEventListener('keydown',e=>{if(e.key==='Enter')waSend()});
+
+/* ===== SMS ===== */
+function fillSMS(D){
+const fn=D.name.split(' ')[0];
+const bd=document.getElementById('smsBody');
+bd.innerHTML='';
+const sys=document.createElement('div');sys.className='mb-sys';sys.textContent='SMS automático · Twilio';bd.appendChild(sys);
+setTimeout(()=>{
+const m=document.createElement('div');m.className='mb bot';m.style.background='var(--card2)';
+m.innerHTML=fn+', tu carrito en Showco ($'+D.total.toLocaleString()+' MXN) te espera. '+D.items.map(i=>i.qty+'× '+i.n).join(', ')+'. Completa tu compra: showco.com.mx/cart 📦 Envío gratis. Responde STOP para no recibir más.<div class="mt">'+wt()+' ✓✓</div>';
+bd.appendChild(m);
+// 2nd SMS
+setTimeout(()=>{
+const s2=document.createElement('div');s2.className='mb bot';s2.style.background='var(--card2)';s2.style.opacity='.5';
+s2.innerHTML='[Programado J+2] '+fn+', tu equipo de '+D.items[0].b+' sigue disponible. Stock limitado. showco.com.mx<div class="mt">Prog. +48h</div>';
+bd.appendChild(s2);
+},400);
+},400);
+}
+
+/* ===== EMAIL ===== */
+function fillEmail(D){
+const fn=D.name.split(' ')[0];
+const bd=document.getElementById('emBody');
+bd.innerHTML=`
+<div class="eml">
+<div class="eml-hd"><div class="eml-from">De: ventas@showco.com.mx · Para: ${D.email}</div><div class="eml-subj">${fn}, tu equipo profesional te espera en Showco</div></div>
+<div class="eml-bd">
+<p>Hola ${fn},</p>
+<p>Notamos que estabas armando un pedido y no pudiste completarlo. Tu selección sigue disponible:</p>
+<div class="eml-prods">${D.items.map(i=>`<div class="eml-prod"><span>${i.e}</span><span>${i.qty}× ${i.b} ${i.n}</span><span class="ep-p">$${(i.p*i.qty).toLocaleString()}</span></div>`).join('')}</div>
+<div class="eml-hl">💰 <b>Total: $${D.total.toLocaleString()} MXN</b> (IVA incl.)<br>📦 Envío GRATIS a ${D.city}<br>💳 12 MSI desde $${Math.round(D.total/12).toLocaleString()}/mes</div>
+<p>📞 (55) 5000 9480 · 💬 WhatsApp disponible 24/7</p>
+</div>
+<div class="eml-cta">Completar mi compra →</div>
+<div class="eml-ft">Showco S.A.P.I. de C.V. · 25 años · 5 sucursales · Powered by n8n + HuggingFace IA</div>
+</div>
+<div class="eml eml-future" style="margin-top:8px">
+<div class="eml-hd"><div class="eml-from">Programado J+3</div><div class="eml-subj">⏰ ${fn}, stock limitado para tu evento</div></div>
+<div class="eml-bd" style="font-size:9px;color:var(--muted);padding:8px">[Seguimiento automático — si no hay conversión]</div>
+</div>
+<div class="eml eml-future" style="margin-top:4px;opacity:.3">
+<div class="eml-hd"><div class="eml-from">Programado J+7</div><div class="eml-subj">🎁 ${fn}, -5% especial solo hoy</div></div>
+<div class="eml-bd" style="font-size:9px;color:var(--muted);padding:8px">[Oferta final — descuento volumen]</div>
+</div>`;
+}
+
+/* ===== CRM ===== */
+function fillCRM(D){
+const fn=D.name.split(' ')[0];
+document.getElementById('csLeads').textContent='1';
+document.getElementById('csCot').textContent='1';
+document.getElementById('csMsg').textContent='3';
+document.getElementById('csRec').textContent='$0';
+document.getElementById('crmPipe').innerHTML=`<h3>Pipeline</h3>
+<div class="crm-lead">
+<div class="cl-top"><div class="cl-av">${fn[0]}</div><div><div class="cl-name">${D.name}</div><div style="font-size:8px;color:var(--muted)">${D.email} · ${D.city}</div></div><div class="cl-stage hot">🔥 Abandono</div></div>
+<div class="cl-detail">💰 <b>$${D.total.toLocaleString()} MXN</b> · ${D.items.map(i=>i.qty+'× '+i.n).join(', ')}<br>📱 ${D.phone}</div>
+<div class="cl-timeline">
+<div class="cl-ev r"><div class="cl-ev-t">${wt()}</div><div>❌ Carrito abandonado</div></div>
+<div class="cl-ev b"><div class="cl-ev-t">+30m</div><div>📧 Email recuperación enviado</div></div>
+<div class="cl-ev o"><div class="cl-ev-t">+30m</div><div>📱 SMS enviado</div></div>
+<div class="cl-ev g"><div class="cl-ev-t">+30m</div><div>💬 WhatsApp IA enviado</div></div>
+<div class="cl-ev p" style="opacity:.4"><div class="cl-ev-t">+3d</div><div>📧 Email #2 (programado)</div></div>
+<div class="cl-ev p" style="opacity:.3"><div class="cl-ev-t">+7d</div><div>🎁 Email oferta (programado)</div></div>
+</div>
+<div class="cl-acts">
+<button onclick="go('wa')">💬 Chat</button>
+<button onclick="go('sms')">📱 SMS</button>
+<button onclick="go('email')">📧 Email</button>
+<button>📞 Llamar</button>
+</div>
+</div>`;
+}
+
+/* ===== CHATBOT WIDGET ===== */
+let cwInit=false;
+function openCW(){document.getElementById('chatWin').classList.add('show');document.getElementById('chatWidget').style.display='none';if(!cwInit){cwInit=true;initCW()}}
+function closeCW(){document.getElementById('chatWin').classList.remove('show');document.getElementById('chatWidget').style.display='block'}
+
+function initCW(){
+const bd=document.getElementById('cwBody');
+const sys=document.createElement('div');sys.className='cw-sys';sys.textContent='Asistente IA · Powered by HuggingFace';bd.appendChild(sys);
+setTimeout(()=>{cwMsg('¡Hola! 👋 Soy el asistente virtual de Showco.\n\n¿En qué puedo ayudarte?','bot');
+setTimeout(()=>cwQR(['Iluminación','Audio','Consolas','Cotización','Tiendas']),400)},500);
+}
+
+function cwMsg(t,type){const d=document.createElement('div');d.className='cw-b '+type;d.innerHTML=t.replace(/\n/g,'<br>')+'<div class="cwt">'+wt()+(type==='bot'?' ✓✓':'')+'</div>';document.getElementById('cwBody').appendChild(d);document.getElementById('cwBody').scrollTop=1e6}
+function cwQR(opts){const r=document.createElement('div');r.className='cw-qr';opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{document.getElementById('cwIn').value=o;cwSend();r.remove()};r.appendChild(b)});document.getElementById('cwBody').appendChild(r)}
+
+async function cwSend(){
+const t=document.getElementById('cwIn').value.trim();if(!t)return;
+cwMsg(t,'user');document.getElementById('cwIn').value='';
+document.getElementById('cwTyp').classList.add('show');
+const resp=await callAI(t,'Cliente navegando la tienda online de Showco.');
+document.getElementById('cwTyp').classList.remove('show');
+cwMsg(resp,'bot');
+}
+document.getElementById('cwIn').addEventListener('keydown',e=>{if(e.key==='Enter')cwSend()});
+
+/* ===== INIT ===== */
+renderCats();renderGrid();
+</script>
+</body>
+</html>
